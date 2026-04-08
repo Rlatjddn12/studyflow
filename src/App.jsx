@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { supabase } from "./lib/supabase.js";
 
 const A="#10B981",A2="#059669",A3="#34D399",AG="rgba(16,185,129,0.12)",AS="rgba(16,185,129,0.06)";
 const BG="#050506",BG2="#0A0A0C",CARD="#101012",CARD2="#141416",BD="#1A1A1E",BD2="#222226";
@@ -281,7 +282,34 @@ function PlanScreen({plan,onGenerate,onToggle,onReset,onEdit,isPro,onPaywall}){c
 function CalendarScreen({plan,onToggle,onEdit,isPro}){const[vm,setVM]=useState(()=>new Date());const[sel,setSel]=useState(null);const y=vm.getFullYear(),m=vm.getMonth();const fd=new Date(y,m,1).getDay();const dim=new Date(y,m+1,0).getDate();const today=new Date().toISOString().split("T")[0];const mn=["1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];const dn=["일","월","화","수","목","금","토"];const pm2={};if(plan)plan.forEach(d=>{pm2[d.date]=d;});const cells=[];for(let i=0;i<fd;i++)cells.push(null);for(let d=1;d<=dim;d++)cells.push(d);const sd=sel&&pm2[sel];const di=plan?plan.findIndex(d=>d.date===sel):-1;return el("div",{style:S.pad},el(Stagger,{delay:50},el("h2",{style:{fontSize:20,fontWeight:800,color:T1,marginBottom:20}},"캘린더"),el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}},el("button",{onClick:()=>setVM(new Date(y,m-1,1)),style:{background:CARD,border:`1px solid ${BD}`,borderRadius:10,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},IC.chevL(T2,18)),el("span",{style:{fontSize:16,fontWeight:700,color:T1}},`${y}년 ${mn[m]}`),el("button",{onClick:()=>setVM(new Date(y,m+1,1)),style:{background:CARD,border:`1px solid ${BD}`,borderRadius:10,width:36,height:36,display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}},IC.chevR(T2,18))),el("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:8}},dn.map(d=>el("div",{key:d,style:{textAlign:"center",fontSize:11,fontWeight:600,color:T4,padding:"6px 0"}},d))),el("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:3,marginBottom:20}},cells.map((day,i)=>{if(!day)return el("div",{key:`e${i}`});const ds=`${y}-${String(m+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;const ht=!!pm2[ds];const it=ds===today;const is=ds===sel;const dd=pm2[ds];const ad=dd?dd.tasks.every(t=>t.done):false;return el("button",{key:i,onClick:()=>setSel(is?null:ds),style:{aspectRatio:"1",borderRadius:12,border:is?`2px solid ${A}`:`1.5px solid ${ht?BD2:"transparent"}`,background:is?AS:it?CARD2:ht?CARD:"transparent",color:it?A:ht?T1:T3,fontSize:13,fontWeight:it||is?700:500,cursor:ht?"pointer":"default",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,transition:"all 0.2s",boxShadow:is?`0 0 16px ${AG}`:"none"}},el("span",null,day),ht&&el("div",{style:{width:4,height:4,borderRadius:2,background:ad?A3:A}}));})),sd&&el("div",{style:{animation:"fadeSlideUp 0.3s ease"}},el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}},el("h3",{style:{fontSize:15,fontWeight:700,color:T1}},sel),el("span",{style:{fontSize:12,fontWeight:600,color:A}},sd.dayLabel)),el("div",{style:{display:"flex",flexDirection:"column",gap:6}},sd.tasks.map(t=>el(TaskItem,{key:t.id,task:t,onToggle:()=>onToggle(di,t.id),onEdit,locked:t.premium&&!isPro})))),!plan&&el("div",{style:{textAlign:"center",padding:"40px 0"}},el("p",{style:{fontSize:13,color:T4}},"플랜을 생성하면 캘린더에 표시됩니다"))));}
 
 // ═══ SETTINGS ═══
-function SettingsScreen({isPro,onPaywall,profile}){return el("div",{style:S.pad},el(Stagger,{delay:70},el("h2",{style:{fontSize:20,fontWeight:800,color:T1,marginBottom:24}},"설정"),!isPro&&el("button",{onClick:onPaywall,style:{width:"100%",background:"linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.1))",border:"1.5px solid rgba(245,158,11,0.2)",borderRadius:16,padding:"18px 20px",display:"flex",alignItems:"center",gap:14,cursor:"pointer",marginBottom:16}},el("div",{style:{width:44,height:44,borderRadius:14,background:`linear-gradient(135deg,${WARN},#F97316)`,display:"flex",alignItems:"center",justifyContent:"center"}},IC.crown("#fff",20)),el("div",{style:{flex:1,textAlign:"left"}},el("span",{style:{fontSize:15,fontWeight:700,color:T1,display:"block",marginBottom:4}},"StudyFlow Pro"),el("span",{style:{fontSize:12,color:T2}},"모든 기능을 잠금 해제하세요"))),profile&&el("div",{style:{background:CARD,border:`1px solid ${BD}`,borderRadius:14,padding:16,marginBottom:8}},el("span",{style:{fontSize:12,fontWeight:600,color:T2,display:"block",marginBottom:8}},"내 프로필"),el("div",{style:{display:"flex",justifyContent:"space-between"}},el("span",{style:{fontSize:13,color:T1}},"하루 집중 시간"),el("span",{style:{fontSize:13,fontWeight:700,color:A}},`${profile.dailyHours}시간`)),profile.weakSubjects&&el("div",{style:{display:"flex",justifyContent:"space-between",marginTop:8}},el("span",{style:{fontSize:13,color:T1}},"취약 과목"),el("span",{style:{fontSize:13,fontWeight:700,color:WARN}},profile.weakSubjects))),...["알림 설정","다크/라이트 모드","데이터 초기화","버전 v1.0"].map(item=>el("div",{key:item,style:{background:CARD,border:`1px solid ${BD}`,borderRadius:14,padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",marginBottom:8}},el("span",{style:{fontSize:14,fontWeight:600,color:T2}},item),el("div",{style:{display:"flex",alignItems:"center",gap:6}},el("span",{style:{fontSize:11,color:T4}},"Coming soon"),IC.chevR(T4,16))))));}
+function SettingsScreen({isPro,onPaywall,profile,onSignOut}){return el("div",{style:S.pad},el(Stagger,{delay:70},el("h2",{style:{fontSize:20,fontWeight:800,color:T1,marginBottom:24}},"설정"),!isPro&&el("button",{onClick:onPaywall,style:{width:"100%",background:"linear-gradient(135deg,rgba(245,158,11,0.1),rgba(249,115,22,0.1))",border:"1.5px solid rgba(245,158,11,0.2)",borderRadius:16,padding:"18px 20px",display:"flex",alignItems:"center",gap:14,cursor:"pointer",marginBottom:16}},el("div",{style:{width:44,height:44,borderRadius:14,background:`linear-gradient(135deg,${WARN},#F97316)`,display:"flex",alignItems:"center",justifyContent:"center"}},IC.crown("#fff",20)),el("div",{style:{flex:1,textAlign:"left"}},el("span",{style:{fontSize:15,fontWeight:700,color:T1,display:"block",marginBottom:4}},"StudyFlow Pro"),el("span",{style:{fontSize:12,color:T2}},"모든 기능을 잠금 해제하세요"))),profile&&el("div",{style:{background:CARD,border:`1px solid ${BD}`,borderRadius:14,padding:16,marginBottom:8}},el("span",{style:{fontSize:12,fontWeight:600,color:T2,display:"block",marginBottom:8}},"내 프로필"),el("div",{style:{display:"flex",justifyContent:"space-between"}},el("span",{style:{fontSize:13,color:T1}},"하루 집중 시간"),el("span",{style:{fontSize:13,fontWeight:700,color:A}},`${profile.dailyHours}시간`)),profile.weakSubjects&&el("div",{style:{display:"flex",justifyContent:"space-between",marginTop:8}},el("span",{style:{fontSize:13,color:T1}},"취약 과목"),el("span",{style:{fontSize:13,fontWeight:700,color:WARN}},profile.weakSubjects))),...["알림 설정","다크/라이트 모드","데이터 초기화","버전 v1.0"].map(item=>el("div",{key:item,style:{background:CARD,border:`1px solid ${BD}`,borderRadius:14,padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer",marginBottom:8}},el("span",{style:{fontSize:14,fontWeight:600,color:T2}},item),el("div",{style:{display:"flex",alignItems:"center",gap:6}},el("span",{style:{fontSize:11,color:T4}},"Coming soon"),IC.chevR(T4,16)))),el("button",{onClick:onSignOut,style:{width:"100%",background:"rgba(239,68,68,0.06)",border:`1.5px solid rgba(239,68,68,0.15)`,borderRadius:14,padding:"15px",fontSize:14,fontWeight:700,color:DANGER,cursor:"pointer",marginTop:8}},"로그아웃")));}
+
+// ═══ LOGIN ═══
+function LoginScreen(){
+  const[busy,setBusy]=useState(false);
+  const login=async()=>{
+    setBusy(true);
+    await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin}});
+    setBusy(false);
+  };
+  const GIcon=()=>el("svg",{width:20,height:20,viewBox:"0 0 48 48"},
+    el("path",{key:"r",fill:"#EA4335",d:"M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.4 30.2 0 24 0 14.8 0 7 5.4 3.1 13.3l7.8 6C12.9 13 18 9.5 24 9.5z"}),
+    el("path",{key:"b",fill:"#4285F4",d:"M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.9 7.2l7.6 5.9C43.7 38.2 46.5 31.8 46.5 24.5z"}),
+    el("path",{key:"y",fill:"#FBBC05",d:"M10.9 28.7A14.6 14.6 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A24 24 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.4-6.1z"}),
+    el("path",{key:"g",fill:"#34A853",d:"M24 48c6.2 0 11.4-2 15.2-5.5l-7.6-5.9c-2 1.4-4.7 2.2-7.6 2.2-6 0-11.1-4-12.9-9.5l-8.4 6.1C7 43 15 48 24 48z"})
+  );
+  return el("div",{style:{...S.pad,minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center"}},
+    el("div",{style:{animation:"fadeSlideUp 0.6s ease",width:"100%",maxWidth:340}},
+      el(Logo,null),
+      el("h1",{style:{fontSize:24,fontWeight:800,color:T1,marginTop:32,marginBottom:12}},"환영합니다"),
+      el("p",{style:{fontSize:14,color:T2,lineHeight:1.6,marginBottom:40}},"AI가 당신에게 딱 맞는 학습 플랜을 만들어드립니다"),
+      el("button",{onClick:login,disabled:busy,style:{width:"100%",background:"#fff",border:"none",borderRadius:14,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"center",gap:12,cursor:busy?"wait":"pointer",fontSize:15,fontWeight:700,color:"#111",boxShadow:"0 2px 16px rgba(0,0,0,.15)"}},
+        el(GIcon,null),
+        busy?"로그인 중...":"Google로 시작하기"
+      )
+    )
+  );
+}
 
 // ═══ ONBOARDING ═══
 function OnboardingScreen({onComplete}){const[step,setStep]=useState(0);const[profile,setProfile]=useState({dailyHours:"3",weakSubjects:""});logEvent("onboarding_start");if(step===0)return el("div",{style:{...S.pad,minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center"}},el("div",{style:{animation:"fadeSlideUp 0.6s ease"}},el(Logo,null),el("h1",{style:{fontSize:24,fontWeight:800,color:T1,marginTop:32,marginBottom:12}},"환영합니다"),el("p",{style:{fontSize:14,color:T2,lineHeight:1.6,marginBottom:40,maxWidth:300}},"AI가 당신에게 딱 맞는 학습 플랜을 만들어드립니다"),el("button",{onClick:()=>{logEvent("onboarding_next");setStep(1);},className:"btn-glow",style:{...S.genBtn,width:"auto",padding:"14px 48px"}},"시작하기")));return el("div",{style:{...S.pad,minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center"}},el(Stagger,{delay:80},el("h2",{style:{fontSize:20,fontWeight:800,color:T1,marginBottom:8}},"학습 프로필 설정"),el("p",{style:{fontSize:13,color:T2,marginBottom:32}},"맞춤형 플랜을 위해 간단한 정보를 입력해주세요"),el("div",{style:{background:CARD,border:`1px solid ${BD}`,borderRadius:16,padding:20,marginBottom:16}},el("label",{style:S.label},"하루 집중 가능 시간"),el("div",{style:{display:"flex",gap:8}},["2","3","4","5"].map(h=>el("button",{key:h,onClick:()=>setProfile({...profile,dailyHours:h}),style:{flex:1,padding:"12px 0",borderRadius:12,border:`1.5px solid ${profile.dailyHours===h?A:BD}`,background:profile.dailyHours===h?AS:"transparent",color:profile.dailyHours===h?A:T2,fontSize:14,fontWeight:700,cursor:"pointer"}},h+"시간")))),el("div",{style:{background:CARD,border:`1px solid ${BD}`,borderRadius:16,padding:20,marginBottom:16}},el("label",{style:S.label},"취약 과목 (선택)"),el("input",{placeholder:"예: 수학, 영어",value:profile.weakSubjects,onChange:e=>setProfile({...profile,weakSubjects:e.target.value}),style:S.input,className:"input-glow"})),el("button",{onClick:()=>{logEvent("onboarding_complete",profile);onComplete(profile);},className:"btn-glow",style:S.genBtn},"완료")));}
@@ -311,31 +339,119 @@ async function generatePlan(subjects,profile){
 
 // ═══ MAIN ═══
 export default function App(){
-  const[screen,setScreen]=useState("onboarding");const[tab,setTab]=useState("home");const[plan,setPlan]=useState(null);const[loading,setLoading]=useState(false);const[isPro,setIsPro]=useState(false);const[profile,setProfile]=useState(null);const[editTask,setEditTask]=useState(null);const[editDI,setEditDI]=useState(-1);const[showPaywall,setShowPaywall]=useState(false);const[showShare,setShowShare]=useState(false);const[streakAlert,setStreakAlert]=useState("");
+  const[user,setUser]=useState(null);
+  const[screen,setScreen]=useState("authLoading");
+  const[tab,setTab]=useState("home");
+  const[plan,setPlan]=useState(null);
+  const[loading,setLoading]=useState(false);
+  const[isPro,setIsPro]=useState(false);
+  const[profile,setProfile]=useState(null);
+  const[editTask,setEditTask]=useState(null);
+  const[editDI,setEditDI]=useState(-1);
+  const[showPaywall,setShowPaywall]=useState(false);
+  const[showShare,setShowShare]=useState(false);
+  const[streakAlert,setStreakAlert]=useState("");
 
   useEffect(()=>{if(!document.getElementById("sf-font")){const l=document.createElement("link");l.id="sf-font";l.rel="stylesheet";l.href=FONT;document.head.appendChild(l);}},[]);
 
-  const streak=calcStreak(plan);
+  const loadUserData=async(uid)=>{
+    const{data:pd}=await supabase.from("profiles").select("*").eq("user_id",uid).maybeSingle();
+    if(pd){
+      setProfile({dailyHours:pd.daily_hours,weakSubjects:pd.weak_subjects||""});
+      const{data:pld}=await supabase.from("plans").select("*").eq("user_id",uid).order("updated_at",{ascending:false}).limit(1).maybeSingle();
+      if(pld?.plan_data)setPlan(pld.plan_data);
+      setScreen("app");
+    }else{
+      setScreen("onboarding");
+    }
+  };
 
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=>{
+      if(session){setUser(session.user);loadUserData(session.user.id);}
+      else setScreen("login");
+    });
+    const{data:{subscription}}=supabase.auth.onAuthStateChange((event,session)=>{
+      if(session&&event==="SIGNED_IN"){setUser(session.user);loadUserData(session.user.id);}
+      else if(!session){setUser(null);setPlan(null);setProfile(null);setScreen("login");}
+    });
+    return()=>subscription.unsubscribe();
+  },[]);
+
+  const streak=calcStreak(plan);
   useEffect(()=>{if(streak.atRisk&&streak.msg){setStreakAlert(streak.msg);const t=setTimeout(()=>setStreakAlert(""),6000);return()=>clearTimeout(t);}},[plan]);
 
-  const generate=async(subjects)=>{setLoading(true);const res=await generatePlan(subjects,profile);if(res&&res.plan){setPlan(res.plan);setTab("home");logEvent("plan_generated",{days:res.plan.length});}else{alert("생성 실패.");logEvent("plan_generate_fail");}setLoading(false);};
-  const toggle=(di,tid)=>{setPlan(p=>p.map((d,i)=>i===di?{...d,tasks:d.tasks.map(t=>t.id===tid?{...t,done:!t.done}:t)}:d));};
+  const syncPlan=async(newPlan,uid=user?.id)=>{
+    if(!uid)return;
+    if(newPlan===null){await supabase.from("plans").delete().eq("user_id",uid);return;}
+    await supabase.from("plans").upsert({user_id:uid,plan_data:newPlan,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+  };
+
+  const generate=async(subjects)=>{
+    setLoading(true);
+    const res=await generatePlan(subjects,profile);
+    if(res&&res.plan){
+      setPlan(res.plan);
+      await syncPlan(res.plan);
+      setTab("home");
+      logEvent("plan_generated",{days:res.plan.length});
+    }else{alert("생성 실패.");logEvent("plan_generate_fail");}
+    setLoading(false);
+  };
+
+  const toggle=(di,tid)=>{
+    setPlan(p=>{
+      const next=p.map((d,i)=>i===di?{...d,tasks:d.tasks.map(t=>t.id===tid?{...t,done:!t.done}:t)}:d);
+      syncPlan(next);
+      return next;
+    });
+  };
+
   const openEdit=task=>{if(!plan)return;for(let i=0;i<plan.length;i++){if(plan[i].tasks.find(t=>t.id===task.id)){setEditDI(i);break;}}setEditTask({...task});};
-  const saveTask=u=>{setPlan(p=>p.map((d,i)=>i===editDI?{...d,tasks:d.tasks.map(t=>t.id===u.id?u:t)}:d));setEditTask(null);};
-  const deleteTask=tid=>{setPlan(p=>p.map((d,i)=>i===editDI?{...d,tasks:d.tasks.filter(t=>t.id!==tid)}:d).filter(d=>d.tasks.length>0));setEditTask(null);};
 
-  if(screen==="onboarding")return el("div",{style:{fontFamily:"'Plus Jakarta Sans',sans-serif",background:BG,color:T1,minHeight:"100vh",maxWidth:"100%",margin:"0 auto"}},el("style",null,CSS),el(OnboardingScreen,{onComplete:p=>{setProfile(p);setScreen("app");}}));
+  const saveTask=u=>{
+    setPlan(p=>{
+      const next=p.map((d,i)=>i===editDI?{...d,tasks:d.tasks.map(t=>t.id===u.id?u:t)}:d);
+      syncPlan(next);
+      return next;
+    });
+    setEditTask(null);
+  };
 
-  return el("div",{style:{fontFamily:"'Plus Jakarta Sans',sans-serif",background:BG,color:T1,minHeight:"100vh",maxWidth:"100%",margin:"0 auto",position:"relative",overflowX:"hidden"}},
+  const deleteTask=tid=>{
+    setPlan(p=>{
+      const next=p.map((d,i)=>i===editDI?{...d,tasks:d.tasks.filter(t=>t.id!==tid)}:d).filter(d=>d.tasks.length>0);
+      syncPlan(next);
+      return next;
+    });
+    setEditTask(null);
+  };
+
+  const handleOnboardingComplete=async(p)=>{
+    setProfile(p);
+    if(user){
+      await supabase.from("profiles").upsert({user_id:user.id,daily_hours:p.dailyHours,weak_subjects:p.weakSubjects,created_at:new Date().toISOString()},{onConflict:"user_id"});
+    }
+    setScreen("app");
+  };
+
+  const handleSignOut=async()=>{await supabase.auth.signOut();};
+
+  const wrapStyle={fontFamily:"'Plus Jakarta Sans',sans-serif",background:BG,color:T1,minHeight:"100vh",maxWidth:"100%",margin:"0 auto"};
+
+  if(screen==="authLoading")return el("div",{style:wrapStyle},el("style",null,CSS),el(LoadingScreen,null));
+  if(screen==="login")return el("div",{style:wrapStyle},el("style",null,CSS),el(LoginScreen,null));
+  if(screen==="onboarding")return el("div",{style:wrapStyle},el("style",null,CSS),el(OnboardingScreen,{onComplete:handleOnboardingComplete}));
+
+  return el("div",{style:{...wrapStyle,position:"relative",overflowX:"hidden"}},
     el("style",null,CSS),
     el(StreakAlert,{msg:streakAlert,onClose:()=>setStreakAlert("")}),
     el("div",{style:{paddingBottom:85}},loading?el(LoadingScreen,null):el(React.Fragment,null,
       tab==="home"&&el(HomeScreen,{plan,onToggle:toggle,onNav:setTab,onEdit:openEdit,onShare:()=>setShowShare(true),streak}),
-      tab==="plan"&&el(PlanScreen,{plan,onGenerate:generate,onToggle:toggle,onReset:()=>setPlan(null),onEdit:openEdit,isPro,onPaywall:()=>setShowPaywall(true)}),
+      tab==="plan"&&el(PlanScreen,{plan,onGenerate:generate,onToggle:toggle,onReset:()=>{setPlan(null);syncPlan(null);},onEdit:openEdit,isPro,onPaywall:()=>setShowPaywall(true)}),
       tab==="timer"&&el(TimerScreen,null),
       tab==="calendar"&&el(CalendarScreen,{plan,onToggle:toggle,onEdit:openEdit,isPro}),
-      tab==="settings"&&el(SettingsScreen,{isPro,onPaywall:()=>setShowPaywall(true),profile})
+      tab==="settings"&&el(SettingsScreen,{isPro,onPaywall:()=>setShowPaywall(true),profile,onSignOut:handleSignOut})
     )),
     !loading&&el(BottomNav,{active:tab,onNav:setTab}),
     editTask&&el(EditModal,{task:editTask,onSave:saveTask,onDelete:deleteTask,onClose:()=>setEditTask(null)}),
